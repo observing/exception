@@ -1,0 +1,36 @@
+{
+  "name": "exception",
+  "version": "0.0.0",
+  "description": "Extended error messages for production environments",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/observing/exception"
+  },
+  "keywords": [
+    "exception",
+    "error",
+    "errors",
+    "err",
+    "exceptional",
+    "fault",
+    "crash",
+    "crashes",
+    "log",
+    "logger",
+    "debug",
+    "debugger",
+    "debugging",
+    "production",
+    "development"
+  ],
+  "author": "Arnout Kazemier",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/observing/exception/issues"
+  },
+  "homepage": "https://github.com/observing/exception"
+}
