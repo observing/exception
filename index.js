@@ -12,6 +12,16 @@ var fuse = require('fusing')
 var dir = path.resolve(process.cwd(), 'exceptions');
 if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 
+//
+// Bump the stackTraceLimit in development, 10 is way to low but setting it
+// higher would make the process run slower.
+//
+if ('production' !== (process.env.NODE_ENV || '').toLowerCase()) {
+  Error.stackTraceLimit = Error.stackTraceLimit !== 10
+    ? Error.stackTraceLimit
+    : 25;
+}
+
 /**
  * A "unique" id to prevent clashing and overriding of the disk cached
  * exceptions.
@@ -28,8 +38,8 @@ var id = fs.readdirSync(dir).length;
  * @param {Error} err The error that caused the exception.
  * @api public
  */
-function Exception(err) {
-  if (!(this instanceof Exception)) return new Exception(err);
+function Exception(err, options) {
+  if (!(this instanceof Exception)) return new Exception(err, options);
   if ('string' === typeof err) err = {
     message: err.message,
     stack: (new Error()).stack
@@ -85,7 +95,9 @@ Exception.prototype.toJSON = function extract() {
       freemem: os.freemem(),
       totalmem: os.totalmem(),
       heap: process.memoryUsage(),
-      pid: process.pid
+      pid: process.pid,
+      features: process.features,
+      modulesloaded: process.moduleLoadList || []
     },
     exception: {
       ocurred: new Date(),
@@ -222,6 +234,8 @@ Exception.prototype.save = function save(fn) {
     // read the JavaScript level state. Which could be helpful for debugging
     // purposes. When `process.abort()` is not available SIGABRT is used
     // instead.
+    //
+    // @TODO make this optional.
     //
     if (process.abort) process.abort();
     for (;;) process.kill(process.pid, 'SIGABRT');
