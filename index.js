@@ -97,7 +97,7 @@ Exception.prototype.toJSON = function extract() {
       heap: process.memoryUsage(),
       pid: process.pid,
       features: process.features,
-      modulesloaded: process.moduleLoadList || []
+      modulesloaded: require('moduleloadlist')()
     },
     exception: {
       ocurred: new Date(),
