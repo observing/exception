@@ -32,5 +32,8 @@
   "bugs": {
     "url": "https://github.com/observing/exception/issues"
   },
-  "homepage": "https://github.com/observing/exception"
+  "homepage": "https://github.com/observing/exception",
+  "dependencies": {
+    "fusing": "0.3.x"
+  }
 }

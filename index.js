@@ -1,6 +1,7 @@
 'use strict';
 
-var path = require('path')
+var fuse = require('fusing')
+  , path = require('path')
   , os = require('os')
   , fs = require('fs');
 
@@ -29,9 +30,14 @@ var id = fs.readdirSync(dir).length;
  */
 function Exception(err) {
   if (!(this instanceof Exception)) return new Exception(err);
+  if ('string' === typeof err) err = {
+    message: err.message,
+    stack: (new Error()).stack
+  };
 
   this.id = id++;
-  this.error = err;
+  this.message = err.message;
+  this.stack = err.stack;
 
   this.filename = new Date().toDateString().split(' ').concat([
     process.pid,    // The current process id
@@ -40,6 +46,8 @@ function Exception(err) {
 
   this.capture = this.toJSON();
 }
+
+fuse(Exception, Error);
 
 /**
  * Generates a extra and useful meta data about the exception. And by using the
@@ -56,6 +64,7 @@ Exception.prototype.toJSON = function extract() {
 
   return {
     node: process.versions,
+    version: require('./package.json').version.split('.').shift(),
     environment: {
       args: process.argv,
       node: process.execPath,
@@ -81,8 +90,8 @@ Exception.prototype.toJSON = function extract() {
     exception: {
       ocurred: new Date(),
       ms: Date.now(),
-      message: this.error.message,
-      stacktrace: this.error.stack.split('\n').map(function map(line) {
+      message: this.message,
+      stacktrace: this.stack.split('\n').map(function map(line) {
         return line.trim();
       })
     }
@@ -107,7 +116,7 @@ Exception.prototype.toString = function toString() {
  * Fetch the current branch and SHA1 from the .git folder.
  *
  * @returns {Object} git checkout
- * @api public
+ * @api private
  */
 Exception.prototype.git = function git() {
   //
@@ -136,8 +145,10 @@ Exception.prototype.git = function git() {
         , checkout
         , sha1;
 
+      //
       // Fetch the 'ref: ref/heads/branch' content and clean it up so we have
       // a reference to the correct ref file with the SHA-1
+      //
       try { checkout = fs.readFileSync(fetch, 'utf-8').slice(5).trim(); }
       catch (e) {}
 
