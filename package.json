@@ -1,6 +1,6 @@
 {
   "name": "exception",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Extended error messages for production environments",
   "main": "index.js",
   "scripts": {
