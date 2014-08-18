@@ -37,6 +37,7 @@ var id = fs.readdirSync(dir).length;
  *
  * @constructor
  * @param {Error} err The error that caused the exception.
+ * @param {Object} options Configuration.
  * @api public
  */
 function Exception(err, options) {
