@@ -1,6 +1,7 @@
 'use strict';
 
-var fuse = require('fusing')
+var heapdump = require('heapdump')
+  , fuse = require('fusing')
   , path = require('path')
   , os = require('os')
   , fs = require('fs');
@@ -41,8 +42,8 @@ var id = fs.readdirSync(dir).length;
 function Exception(err, options) {
   if (!(this instanceof Exception)) return new Exception(err, options);
   if ('string' === typeof err) err = {
-    message: err.message,
-    stack: (new Error()).stack
+    stack: (new Error()).stack,
+    message: err.message
   };
 
   this.id = id++;
@@ -186,10 +187,18 @@ Exception.prototype.git = function git() {
  * @api private
  */
 Exception.prototype.disk = function disk() {
-  var location = path.resolve(process.cwd(), 'exceptions', this.filename +'.json');
+  var location = path.resolve(process.cwd(), 'exceptions', this.filename);
 
-  try { fs.writeFileSync(location, JSON.stringify(this)); }
+  //
+  // First write our own dump of gathered information.
+  //
+  try { fs.writeFileSync(location +'.json', JSON.stringify(this)); }
   catch (e) { console.error('Failed to write exception to disk', e); }
+
+  //
+  // Now try to write out the heap dump.
+  //
+  heapdump.writeSnapshot(location +'.heapsnapshot');
 
   return this;
 };

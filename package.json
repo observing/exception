@@ -35,6 +35,7 @@
   "homepage": "https://github.com/observing/exception",
   "dependencies": {
     "fusing": "0.3.x",
+    "heapdump": "0.2.x",
     "moduleloadlist": "0.0.x"
   }
 }
