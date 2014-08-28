@@ -3,6 +3,7 @@
 var heapdump = require('heapdump')
   , fuse = require('fusing')
   , path = require('path')
+  , ini = require('ini')
   , os = require('os')
   , fs = require('fs');
 
@@ -141,6 +142,7 @@ Exception.prototype.git = function git() {
   // - fetch the ref/<>/<> for the SHA
   //
   var dir = process.cwd().split(path.sep)
+    , read = fs.readFileSync
     , isDirectory
     , dot;
 
@@ -157,23 +159,31 @@ Exception.prototype.git = function git() {
     if (isDirectory) {
       var fetch = path.resolve(dot, 'HEAD')
         , checkout
+        , data
         , sha1;
+
+      //
+      // Read-out the git configuration for some additional information about
+      // the users project.
+      //
+      try { data = ini.parse(read(path.join(dot, 'config'), 'utf-8')); }
+      catch (e) { data = {}; }
 
       //
       // Fetch the 'ref: ref/heads/branch' content and clean it up so we have
       // a reference to the correct ref file with the SHA-1
       //
-      try { checkout = fs.readFileSync(fetch, 'utf-8').slice(5).trim(); }
+      try { checkout = read(fetch, 'utf-8').slice(5).trim(); }
       catch (e) {}
 
       fetch = path.resolve(dot, checkout);
-      try { sha1 = fs.readFileSync(fetch, 'utf-8').trim(); }
+      try { sha1 = read(fetch, 'utf-8').trim(); }
       catch (e) {}
 
-      return {
-        checkout: checkout,
-        sha1: sha1
-      };
+      if (checkout) data.checkout = checkout;
+      if (sha1) data.sha1 = sha1;
+
+      return data;
     } else {
       dir.pop();
     }
