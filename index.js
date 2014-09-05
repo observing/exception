@@ -69,7 +69,7 @@ fuse(Exception, Error);
  * @return {Object} JSON structure with the error and it's meta data.
  * @api private
  */
-Exception.prototype.toJSON = function extract() {
+Exception.readable('toJSON', function extract() {
   //
   // Prevent duplicate generation.
   //
@@ -111,7 +111,7 @@ Exception.prototype.toJSON = function extract() {
       })
     }
   };
-};
+});
 
 /**
  * Create a human readable exception output.
@@ -119,13 +119,13 @@ Exception.prototype.toJSON = function extract() {
  * @returns {String}
  * @api private
  */
-Exception.prototype.toString = function toString() {
+Exception.readable('toString', function toString() {
   var str = JSON.stringify(this, null, 2)
     .replace(/\}/g, '')
     .replace(/\{/g, '');
 
   return str;
-};
+});
 
 /**
  * Fetch the current branch and SHA1 from the .git folder.
@@ -133,7 +133,7 @@ Exception.prototype.toString = function toString() {
  * @returns {Object} git checkout
  * @api private
  */
-Exception.prototype.git = function git() {
+Exception.writable('git', function git() {
   //
   // Approach:
   //
@@ -190,14 +190,14 @@ Exception.prototype.git = function git() {
   }
 
   return {};
-};
+});
 
 /**
  * Write the exception to disk.
  *
  * @api private
  */
-Exception.prototype.disk = function disk() {
+Exception.writable('disk', function disk() {
   var location = path.resolve(process.cwd(), 'exceptions', this.filename);
 
   //
@@ -212,21 +212,21 @@ Exception.prototype.disk = function disk() {
   heapdump.writeSnapshot(location +'.heapsnapshot');
 
   return this;
-};
+});
 
 /**
  * Write the exception to STDOUT;
  *
  * @api private
  */
-Exception.prototype.console = function log() {
+Exception.writable('console', function log() {
   console.error('');
   console.error('Exception ('+ this.filename +') :');
   console.error(JSON.stringify(this.toJSON(), null, 2));
   console.error('');
 
   return this;
-};
+});
 
 /**
  * Write the connection to a remove server.
@@ -234,10 +234,10 @@ Exception.prototype.console = function log() {
  * @param {Function} callback
  * @api private
  */
-Exception.prototype.remote = function remote(fn) {
+Exception.writable('remote', function remote(fn) {
   process.nextTick(fn);
   return this;
-};
+});
 
 /**
  * Saves the exception. It saves this to disk automatically. When no callback is
@@ -246,7 +246,7 @@ Exception.prototype.remote = function remote(fn) {
  * @param {Function} fn Callback for when everything is saved;
  * @api public
  */
-Exception.prototype.save = function save(fn) {
+Exception.readable('save', function save(fn) {
   return this.console().disk().remote(fn || function abort() {
     //
     // Exit the program using `process.abort()` which is abort(3C) on some
@@ -260,6 +260,47 @@ Exception.prototype.save = function save(fn) {
     if (process.abort) process.abort();
     for (;;) process.kill(process.pid, 'SIGABRT');
   });
+});
+
+/**
+ * Tired of writing uncaughtException? Simply include:
+ *
+ * ```js
+ * require('exception').listen();
+ * ```
+ *
+ * In your scripts and you're ready for debugging heaven.
+ *
+ * @param {Function} fn Optional callback function when our exception has written.
+ * @returns {Exception}
+ * @api public
+ */
+Exception.listen = function listen(fn) {
+  var Failure = this;
+
+  //
+  // Listen for exception once as we do not want to generate an exception for
+  // our exception when our exception leads to an exception as you would get
+  // exception inception.
+  //
+  process.once('uncaughtException', function uncaught(err) {
+    (new Failure(err)).save(fn);
+  });
+
+  //
+  // Also listen to SIGURD to write a heap dump so we can do heap inspections
+  // of running applications.
+  //
+  process.on('SIGUSR1', function signal() {
+    var name = new Date().toDateString().split(' ').concat([
+      process.pid,     // The current process id
+      id++              // Unique id for this exception.
+    ]).join('-') +'.heapsnapshot';
+
+    heapdump.writeSnapshot(path.resolve(process.cwd(), 'exceptions', name));
+  });
+
+  return this;
 };
 
 //
