@@ -195,7 +195,7 @@ Exception.writable('git', function git() {
 /**
  * Write the exception to disk.
  *
- * @api private
+ * @api public
  */
 Exception.writable('disk', function disk() {
   var location = path.resolve(process.cwd(), 'exceptions', this.filename);
@@ -217,7 +217,7 @@ Exception.writable('disk', function disk() {
 /**
  * Write the exception to STDOUT;
  *
- * @api private
+ * @api public
  */
 Exception.writable('console', function log() {
   console.error('');
@@ -232,7 +232,7 @@ Exception.writable('console', function log() {
  * Write the connection to a remove server.
  *
  * @param {Function} callback
- * @api private
+ * @api public
  */
 Exception.writable('remote', function remote(fn) {
   process.nextTick(fn);
