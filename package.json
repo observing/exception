@@ -1,7 +1,7 @@
 {
   "name": "exception",
-  "version": "0.0.2",
-  "description": "Extended error messages for production environments",
+  "version": "0.1.0",
+  "description": "Generate heap dumps and detailed output for uncaught exceptions and critical errors",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,21 +11,26 @@
     "url": "https://github.com/observing/exception"
   },
   "keywords": [
-    "exception",
-    "error",
-    "errors",
-    "err",
-    "exceptional",
-    "fault",
     "crash",
     "crashes",
-    "log",
-    "logger",
     "debug",
     "debugger",
     "debugging",
+    "development",
+    "dump",
+    "err",
+    "error",
+    "errors",
+    "exception",
+    "exceptional",
+    "fault",
+    "heap",
+    "heapdump",
+    "log",
+    "logger",
     "production",
-    "development"
+    "uncaught",
+    "uncaughtException"
   ],
   "author": "Arnout Kazemier",
   "license": "MIT",
