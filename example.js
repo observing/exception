@@ -1,11 +1,5 @@
 'use strict';
 
-var Exception = require('./');
-
-process.on('uncaughtException', function shit(err) {
-  var exception = new Exception(err);
-
-  exception.save();
-});
+var Exception = require('./').listen();
 
 throw new Error('fucked');
