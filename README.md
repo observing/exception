@@ -1,18 +1,58 @@
 # Exception
 
-Better errors for Node applications that run in production. It outputs useful
-process information that will aid in debugging the crashes. The information can
-be saved to disk, console and a remote database or just stored a JSON document.
+Exception is nifty little module that will make your life a lot easier when your
+applications start crashing. So what makes Exception exceptional:
+
+- **git**: When it detects that your application runs from git repository it
+  will automatically include the sha1, branch and even it's configuration in the
+  output.
+
+- **process**: Useful information like load average, uptime, free memory, heap
+  size, process id and even the build information of your node process are
+  included.
+
+- **modules**: A dump of all loaded modules is included. This includes node's
+  modules, native compiled modules and user modules.
+
+- **heapdump**: We automatically generate a heap dump of your process. This
+  allows you to inspect the state of the application during the crash.
+
+And much much more. If you need more information do not hesitate to create an
+issue on our Github issue tracker because that same information might also be
+useful for others!
+
+To store all this information in a redundant way we support different modes of
+outputting this data:
+
+- **disk**: We automatically create an `exception` folder your current working
+  directory where all dumps will be added. With the disk mode we add a JSON
+  document of all the information as well as the `.heapsnapshot` of the process.
+- **console**: We output the information to **stderr**.
+- **remote**: Alternatively you can store this information in a database.
+
+See the [usage](#usage) section for detailed information.
 
 ## Installation
+
+This module is released in npm and we advise you to only include this module
+once in your application. This module is not meant as library dependency but as
+application dependency. So to install this module as dependency of your
+application run:
 
 ```
 npm install --save exception
 ```
 
+If you're suborn and want it as library dependency run:
+
+```
+node -e "console.log('DO NOT INSTALL THIS A LIBRARY DEPENDENCY')"
+```
+
 ## Usage
 
-In all examples we assume that you've loaded the library in this way:
+In all the examples we assume that you've required the library in your
+**application** using: 
 
 ```js
 'use strict';
@@ -20,13 +60,150 @@ In all examples we assume that you've loaded the library in this way:
 var Exception = require('exception');
 ```
 
-To create a new exception you first need to have an error:
+This requires the `Exception` class so you can generate new exceptions. One of
+the places where you want to generate an exception is in the `uncaughtException`
+handler. You can do this manually using:
+
+```js
+process.once('uncaughtException', function derp(err) {
+  var exception = new Exception(err);
+
+  exception.save();
+});
+```
+
+Or use our convenience method:
+
+### Exception.listen
+
+The exposed `.listen` function will automatically assign a
+`process.once(uncaughtException)` handler which will automatically save the
+exception for you **and** a `process.on(SIGUSR1)` which will generate heap dumps
+every single time it's called.
+
+You can supply the `.listen` function with a callback which will be called once
+the exception has been saved so you can exit the process your self. If you do
+not exit the node process we will attempt to abort the node process so the
+operation system will also generate a dump of the application. 
+
+```js
+Exception.listen();
+
+// or
+
+Exception.listen(function fn() {
+  additionalCleanup();
+  process.exit(1);
+});
+```
+
+### Extending exceptions
+
+As you've might have read in the intro, we support different ways of storing
+data. One of these ways was `remote` storage. In order to use this you need to
+create a custom instance of Exception and extend it with a custom `remote`
+method:
+
+```js
+var CustomException = Exception.extend({
+  remote: function remote(fn) {
+    putthisshitinmongodbmethod(this.JSON(), fn);
+  }
+});
+```
+
+We assume that the `putthisshitinmongodbmethod` does your fancy pancy database /
+storage call and calls the `fn` when completed. You can now use your custom
+exception in the exact same way as the regular exception:
+
+```js
+process.once('uncaughtException', function (err) {
+  var exception = new CustomException(err);
+
+  exception.save();
+});
+
+//
+// and even the .listen method would still work:
+//
+
+CustomException.listen();
+```
+
+In the example code above you might have noticed the `.toJSON` method. We got a
+bunch of those available. Here's a list of all of the things that is available:
+
+### Exception.toJSON
+
+Generate the JSON dump and return it. As this method is called `toJSON` it will
+also automatically be called when you run `JSON.stringify(exception)`.
 
 ```js
 var exception = new Exception(err);
+
+var data = exception.toJSON();
+console.log(JSON.stringify(exception));
+```
+
+### Exception.toString
+
+Generate a some what human readable output. (Just a prettified JSON output atm,
+pull requests regarding this will be accepted in a heartbeat. Was intended for
+development purposes).
+
+```js
+var exception = new Exception(err);
+
+console.log(exception.toString());
+```
+
+### Exception.disk
+
+Write the exception's JSON dump to disk **and** generate the heapdump. Please
+note that this is a synchronous process and that your node process will stall
+for a bit. But this is worth it in the end as you wouldn't be generating
+exceptions if something is seriously fucked up.
+
+```js
+var exception = new Exception(err);
+exception.disk();
+```
+
+### Exception.console
+
+Write the JSON dump to the console. With an empty line before and after the
+dump. It uses `console.error` which will write the output to **stderr** and
+`console.*` is blocking write call to stderr.
+
+```js
+var exception = new Exception(err);
+exception.console();
+```
+
+### Exception.remote
+
+This function does nothing by default. It's just a `process.nextTick` which
+calls the supplied callback. It does nothing because it's left for you to
+implement it. See [extending exceptions](#extending-exceptions).
+
+### Exception.save
+
+This saves the exception using the console, disk and remote method. Redundancy
+all the exception outputs. When no callback is supplied in this method we will
+automatically attempt to destroy your node process using `process.abort()` so
+the OS can save a core file of the app. This should be the recommended approach
+for storing your exceptions.
+
+```js
+var exception = new Exception(err);
+
+exception.save();
 ```
 
 ## Example output
+
+Of course, actions speak louder than words, but I hope that it's same with
+example output:
 
 ```
 {
