@@ -110,7 +110,7 @@ Exception.readable('toJSON', function extract() {
       stacktrace: this.stack.split('\n').map(function map(line) {
         return line.trim();
       }),
-      line: failing(this).filter(function filter(stack) {
+      line: (failing(this) || []).filter(function filter(stack) {
         return stack.failed;
       })
     }
