@@ -39,6 +39,7 @@
   },
   "homepage": "https://github.com/observing/exception",
   "dependencies": {
+    "failing-code": "0.1.x",
     "fusing": "0.3.x",
     "heapdump": "0.2.x",
     "ini": "1.2.x",

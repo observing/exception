@@ -1,6 +1,7 @@
 'use strict';
 
-var heapdump = require('heapdump')
+var failing = require('failing-code')
+  , heapdump = require('heapdump')
   , fuse = require('fusing')
   , path = require('path')
   , ini = require('ini')
@@ -108,6 +109,9 @@ Exception.readable('toJSON', function extract() {
       message: this.message,
       stacktrace: this.stack.split('\n').map(function map(line) {
         return line.trim();
+      }),
+      line: failing(this).filter(function filter(stack) {
+        return stack.failed;
       })
     }
   };
