@@ -43,7 +43,7 @@ application run:
 npm install --save exception
 ```
 
-If you're suborn and want it as library dependency run:
+If you're stubborn and want it as library dependency run:
 
 ```
 node -e "console.log('DO NOT INSTALL THIS A LIBRARY DEPENDENCY')"
