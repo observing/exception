@@ -141,6 +141,11 @@ Exception.readable('toJSON', function extract() {
     },
     process: {
       uptime: os.uptime(),
+      title: process.title,
+      active: {
+        requests: process._getActiveRequests.length,
+        handles: process._getActiveHandles.length
+      },
       memory: {
         rss: bytes(memory.rss),
         heap: {
