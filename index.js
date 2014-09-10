@@ -76,6 +76,8 @@ Exception.readable('toJSON', function extract() {
   //
   if (this.capture) return this.capture;
 
+  var cpus = os.cpus();
+
   return {
     node: process.versions,
     version: require('./package.json').version.split('.').shift(),
@@ -92,6 +94,13 @@ Exception.readable('toJSON', function extract() {
       platform: process.platform,
       arch: process.arch,
       hostname: os.hostname(),
+      cpu: {
+        cores: cpus.length,
+        speed: cpus.reduce(function sum(memo, cpu) {
+          return memo + cpu.speed;
+        }, 0) / cpus.length,
+        model: cpus[0].model
+      }
     },
     process: {
       load: os.loadavg(),
