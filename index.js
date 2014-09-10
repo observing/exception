@@ -49,9 +49,12 @@ function Exception(err, options) {
     message: err.message
   };
 
+  options = options || {};
+
   this.id = id++;
   this.message = err.message;
   this.stack = err.stack;
+  this.human = !!options.human;
 
   this.filename = new Date().toDateString().split(' ').concat([
     process.pid,    // The current process id
@@ -76,7 +79,34 @@ Exception.readable('toJSON', function extract() {
   //
   if (this.capture) return this.capture;
 
-  var cpus = os.cpus();
+  var memory = process.memoryUsage()
+    , readable = this.human || true
+    , load = os.loadavg()
+    , cpus = os.cpus();
+
+  /**
+   * Make the bytes human readable if needed.
+   *
+   * @param {Number} b Bytes
+   * @returns {String|Number}
+   * @api private
+   */
+  function bytes(b) {
+    if (!readable) return b;
+
+    var tb = ((1 << 30) * 1024)
+      , gb = 1 << 30
+      , mb = 1 << 20
+      , kb = 1 << 10
+      , abs = Math.abs(b);
+
+    if (abs >= tb) return (Math.round(b / tb * 100) / 100) + 'tb';
+    if (abs >= gb) return (Math.round(b / gb * 100) / 100) + 'gb';
+    if (abs >= mb) return (Math.round(b / mb * 100) / 100) + 'mb';
+    if (abs >= kb) return (Math.round(b / kb * 100) / 100) + 'kb';
+
+    return b + 'b';
+  }
 
   return {
     node: process.versions,
@@ -94,7 +124,14 @@ Exception.readable('toJSON', function extract() {
       platform: process.platform,
       arch: process.arch,
       hostname: os.hostname(),
+      freemem: bytes(os.freemem()),
+      totalmem: bytes(os.totalmem()),
       cpu: {
+        load: {
+           1: load[0],
+           5: load[1],
+          15: load[2]
+        },
         cores: cpus.length,
         speed: cpus.reduce(function sum(memo, cpu) {
           return memo + cpu.speed;
@@ -103,11 +140,15 @@ Exception.readable('toJSON', function extract() {
       }
     },
     process: {
-      load: os.loadavg(),
       uptime: os.uptime(),
-      freemem: os.freemem(),
-      totalmem: os.totalmem(),
-      heap: process.memoryUsage(),
+      memory: {
+        rss: bytes(memory.rss),
+        heap: {
+          used: bytes(memory.heapUsed),
+          allocated: bytes(memory.heapTotal)
+        },
+        native: bytes(memory.rss - memory.heapTotal)
+      },
       pid: process.pid,
       features: process.features,
       modulesloaded: require('moduleloadlist')()
