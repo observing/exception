@@ -80,7 +80,7 @@ Exception.readable('toJSON', function extract() {
   if (this.capture) return this.capture;
 
   var memory = process.memoryUsage()
-    , readable = this.human || true
+    , readable = this.human
     , load = os.loadavg()
     , cpus = os.cpus();
 
@@ -115,7 +115,10 @@ Exception.readable('toJSON', function extract() {
       args: process.argv,
       node: process.execPath,
       cwd: process.cwd(),
-      env: process.env,
+      env: Object.keys(process.env).sort().reduce(function reassemble(memo, key) {
+        memo[key] = process.env[key];
+        return memo;
+      }, {}),
       gid: process.getgid(),
       uid: process.getuid()
     },
