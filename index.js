@@ -29,8 +29,8 @@ if ('production' !== (process.env.NODE_ENV || '').toLowerCase()) {
 function Exception(err, options) {
   if (!(this instanceof Exception)) return new Exception(err, options);
   if ('string' === typeof err) err = {
-    stack: (new Error()).stack,
-    message: err.message
+    stack: (new Error(err)).stack,
+    message: err
   };
 
   options = options || {};
@@ -86,7 +86,9 @@ Exception.readable('initialize', function initialize(options) {
   //
   // Attempt to find the package.json that included this library.
   //
-  var parent = options.parent || path.resolve(__dirname, '../../package.json');
+  var parent = options.parent
+    || this.packagejson
+    || path.resolve(__dirname, '../../package.json');
 
   if (!fs.existsSync(parent)) return;
 
