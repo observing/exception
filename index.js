@@ -34,26 +34,17 @@ function Exception(err, options) {
   };
 
   options = options || {};
-  var dir = path.resolve(this.directory, 'exceptions');
-
-  //
-  // Make sure that we have an exceptions directory where we can write our disk
-  // based errors to.
-  //
-  if (!fs.existsSync(dir)) require('mkdirp').sync(dir);
-
-  this.id = fs.readdirSync(dir).filter(function json(file) {
-    return '.json' === path.extname(file);
-  }).length++;
+  this.initialize(options);
 
   this.message = err.message;
   this.stack = err.stack;
   this.human = !!options.human;
 
   this.filename = new Date().toDateString().split(' ').concat([
+    this.appname,   // Name of the library or app that included us.
     process.pid,    // The current process id
     this.id         // Unique id for this exception.
-  ]).join('-');
+  ]).filter(Boolean).join('-');
 
   this.capture = this.toJSON();
 }
@@ -67,6 +58,41 @@ fuse(Exception, Error);
  * @public
  */
 Exception.writable('directory', process.cwd());
+
+/**
+ * Internal configuration and gather of potential required information.
+ *
+ * @api private
+ */
+Exception.readable('initialize', function initialize(options) {
+  var dir = path.resolve(this.directory, 'exceptions');
+
+  //
+  // Make sure that we have an exceptions directory where we can write our disk
+  // based errors to.
+  //
+  if (!fs.existsSync(dir)) require('mkdirp').sync(dir);
+
+  //
+  // Generate a unique id which we can increment to add another way of
+  // preventing potential collisions. This check needs to be done during the
+  // creation of the Exception as multiple node process can write to the same
+  // location and still cause some weird conflict.
+  //
+  this.id = fs.readdirSync(dir).filter(function json(file) {
+    return '.json' === path.extname(file);
+  }).length++;
+
+  //
+  // Attempt to find the package.json that included this library.
+  //
+  var parent = options.parent || path.resolve(__dirname, '../../package.json');
+
+  if (!fs.existsSync(parent)) return;
+
+  this.parent = require(parent);
+  this.appname = this.parent.name;
+});
 
 /**
  * Generates a extra and useful meta data about the exception. And by using the
@@ -125,6 +151,7 @@ Exception.readable('toJSON', function extract() {
       uid: process.getuid()
     },
     git: this.git(),
+    parent: this.parent,
     system: {
       platform: process.platform,
       arch: process.arch,
