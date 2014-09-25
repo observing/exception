@@ -45,6 +45,7 @@
     "fusing": "0.3.x",
     "heapdump": "0.2.x",
     "ini": "1.2.x",
+    "mkdirp": "0.5.x",
     "moduleloadlist": "0.0.x"
   }
 }

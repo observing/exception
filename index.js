@@ -40,9 +40,12 @@ function Exception(err, options) {
   // Make sure that we have an exceptions directory where we can write our disk
   // based errors to.
   //
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+  if (!fs.existsSync(dir)) require('mkdirp').sync(dir);
 
-  this.id = fs.readdirSync(dir).length++;
+  this.id = fs.readdirSync(dir).filter(function json(file) {
+    return '.json' === path.extname(file);
+  }).length++;
+
   this.message = err.message;
   this.stack = err.stack;
   this.human = !!options.human;
