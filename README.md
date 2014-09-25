@@ -113,8 +113,23 @@ var CustomException = Exception.extend({
 ```
 
 We assume that the `putthisshitinmongodbmethod` does your fancy pancy database /
-storage call and calls the `fn` when completed. You can now use your custom
-exception in the exact same way as the regular exception:
+storage call and calls the `fn` when completed. 
+
+By default we just dump all the information in the `process.cwd()` of your node
+process. This can be less then ideal in certain cases as you might want to store
+the heapdumps and json dumps on a different disk. You can configure the location
+of the dumps by changing the `directory` property:
+
+```js
+var CustomException = Exception.extend({
+  // imagine that this comment is actually the remote code of the example above.
+
+  directory: '/my/root/volume/shared/goat/waffles'
+});
+```
+
+You can now use your custom exception in the exact same way as the regular
+exception:
 
 ```js
 process.once('uncaughtException', function (err) {

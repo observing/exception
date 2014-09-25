@@ -9,13 +9,6 @@ var failing = require('failing-code')
   , fs = require('fs');
 
 //
-// Make sure that we have an exceptions directory where we can write our disk
-// based errors to.
-//
-var dir = path.resolve(process.cwd(), 'exceptions');
-if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-
-//
 // Bump the stackTraceLimit in development, 10 is way to low but setting it
 // higher would make the process run slower.
 //
@@ -24,15 +17,6 @@ if ('production' !== (process.env.NODE_ENV || '').toLowerCase()) {
     ? Error.stackTraceLimit
     : 25;
 }
-
-/**
- * A "unique" id to prevent clashing and overriding of the disk cached
- * exceptions.
- *
- * @type {Number}
- * @private
- */
-var id = fs.readdirSync(dir).length;
 
 /**
  * Generates a new Exception.
@@ -50,8 +34,15 @@ function Exception(err, options) {
   };
 
   options = options || {};
+  var dir = path.resolve(this.directory, 'exceptions');
 
-  this.id = id++;
+  //
+  // Make sure that we have an exceptions directory where we can write our disk
+  // based errors to.
+  //
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+
+  this.id = fs.readdirSync(dir).length++;
   this.message = err.message;
   this.stack = err.stack;
   this.human = !!options.human;
@@ -65,6 +56,14 @@ function Exception(err, options) {
 }
 
 fuse(Exception, Error);
+
+/**
+ * Allow the directory of the dumps to be customized.
+ *
+ * @type {String}
+ * @public
+ */
+Exception.writable('directory', process.cwd());
 
 /**
  * Generates a extra and useful meta data about the exception. And by using the
@@ -260,7 +259,7 @@ Exception.writable('git', function git() {
  * @api public
  */
 Exception.writable('disk', function disk() {
-  var location = path.resolve(process.cwd(), 'exceptions', this.filename);
+  var location = path.resolve(this.directory, 'exceptions', this.filename);
 
   //
   // First write our own dump of gathered information.
@@ -354,12 +353,7 @@ Exception.listen = function listen(fn) {
   // of running applications.
   //
   process.on('SIGUSR1', function signal() {
-    var name = new Date().toDateString().split(' ').concat([
-      process.pid,     // The current process id
-      id++              // Unique id for this exception.
-    ]).join('-') +'.heapsnapshot';
-
-    heapdump.writeSnapshot(path.resolve(process.cwd(), 'exceptions', name));
+    (new Failure(new Error('Received SIGUSR1'))).disk();
   });
 
   return this;
