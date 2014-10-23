@@ -1,6 +1,7 @@
 'use strict';
 
-var failing = require('failing-code')
+var debug = require('diagnostics')('exception')
+  , failing = require('failing-code')
   , heapdump = require('heapdump')
   , fuse = require('fusing')
   , path = require('path')
@@ -32,6 +33,8 @@ function Exception(err, options) {
     stack: (new Error(err)).stack,
     message: err
   };
+
+  debug('generating a new exception for: %s', err.message);
 
   options = options || {};
   this.initialize(options);
@@ -71,7 +74,10 @@ Exception.readable('initialize', function initialize(options) {
   // Make sure that we have an exceptions directory where we can write our disk
   // based errors to.
   //
-  if (!fs.existsSync(dir)) require('mkdirp').sync(dir);
+  if (!fs.existsSync(dir)) {
+    debug('missing exceptions directory: %s, generating one', dir);
+    require('mkdirp').sync(dir);
+  }
 
   //
   // Generate a unique id which we can increment to add another way of
@@ -90,7 +96,9 @@ Exception.readable('initialize', function initialize(options) {
     || this.packagejson
     || path.resolve(__dirname, '../../package.json');
 
-  if (!fs.existsSync(parent)) return;
+  if (!fs.existsSync(parent)) {
+    return debug('cannot find parent package.json: %s, ignoring data', parent);
+  }
 
   this.parent = require(parent);
   this.appname = this.parent.name;
@@ -247,11 +255,14 @@ Exception.writable('git', function git() {
     // installed through git.
     //
     try { isDirectory = fs.lstatSync(dot).isDirectory(); }
-    catch (e) { continue; }
+    catch (e) {
+      dir.pop();
+      continue;
+    }
 
     if (isDirectory) {
       var fetch = path.resolve(dot, 'HEAD')
-        , checkout
+        , checkout = ''
         , data
         , sha1;
 
@@ -260,18 +271,18 @@ Exception.writable('git', function git() {
       // the users project.
       //
       try { data = ini.parse(read(path.join(dot, 'config'), 'utf-8')); }
-      catch (e) { data = {}; }
+      catch (e) { data = {}; debug('failed to read out git config'); }
 
       //
       // Fetch the 'ref: ref/heads/branch' content and clean it up so we have
       // a reference to the correct ref file with the SHA-1
       //
       try { checkout = read(fetch, 'utf-8').slice(5).trim(); }
-      catch (e) {}
+      catch (e) { debug('failed to read out ref for checkout'); }
 
       fetch = path.resolve(dot, checkout);
       try { sha1 = read(fetch, 'utf-8').trim(); }
-      catch (e) {}
+      catch (e) { debug('failed to read out SHA1 of current commit'); }
 
       if (checkout) data.checkout = checkout;
       if (sha1) data.sha1 = sha1;
@@ -341,6 +352,8 @@ Exception.writable('remote', function remote(fn) {
  */
 Exception.readable('save', function save(fn) {
   return this.console().disk().remote(fn || function abort() {
+    debug('stored the dump to all the things, attempting to crash project');
+
     //
     // Exit the program using `process.abort()` which is abort(3C) on some
     // systems this causes the OS to save a core file that can be used to
@@ -371,6 +384,8 @@ Exception.readable('save', function save(fn) {
 Exception.listen = function listen(fn) {
   var Failure = this;
 
+  debug('listening for uncaught exceptions');
+
   //
   // Listen for exception once as we do not want to generate an exception for
   // our exception when our exception leads to an exception as you would get
@@ -385,6 +400,7 @@ Exception.listen = function listen(fn) {
   // of running applications.
   //
   process.on('SIGUSR1', function signal() {
+    debug('received a signal, storing dump to disk for inspection');
     (new Failure(new Error('Received SIGUSR1'))).disk();
   });
 

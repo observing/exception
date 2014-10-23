@@ -41,10 +41,11 @@
   },
   "homepage": "https://github.com/observing/exception",
   "dependencies": {
+    "diagnostics": "0.0.x",
     "failing-code": "0.1.x",
-    "fusing": "0.3.x",
+    "fusing": "0.4.x",
     "heapdump": "0.2.x",
-    "ini": "1.2.x",
+    "ini": "1.3.x",
     "mkdirp": "0.5.x",
     "moduleloadlist": "0.0.x"
   }
