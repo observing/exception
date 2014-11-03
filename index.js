@@ -307,7 +307,7 @@ Exception.writable('disk', function disk() {
   //
   // First write our own dump of gathered information.
   //
-  try { fs.writeFileSync(location +'.json', JSON.stringify(this)); }
+  try { fs.writeFileSync(location +'.json', JSON.stringify(this, null, 2)); }
   catch (e) { console.error('Failed to write exception to disk', e); }
 
   //
