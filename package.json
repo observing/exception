@@ -1,6 +1,6 @@
 {
   "name": "exception",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Generate heap dumps and detailed output for uncaught exceptions and critical errors",
   "main": "index.js",
   "scripts": {
