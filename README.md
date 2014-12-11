@@ -1,5 +1,12 @@
 # Exception
 
+[![Version npm][version]](http://browsenpm.org/package/exception)[![Build Status][build]](https://travis-ci.org/observing/exception)[![Dependencies][david]](https://david-dm.org/observing/exception)[![Coverage Status][cover]](https://coveralls.io/r/observing/exception?branch=master)
+
+[version]: http://img.shields.io/npm/v/exception.svg?style=flat-square
+[build]: http://img.shields.io/travis/observing/exception/master.svg?style=flat-square
+[david]: https://img.shields.io/david/observing/exception.svg?style=flat-square
+[cover]: http://img.shields.io/coveralls/observing/exception/master.svg?style=flat-square
+
 Exception is nifty little module that will make your life a lot easier when your
 applications start crashing. So what makes Exception exceptional:
 
