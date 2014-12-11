@@ -59,12 +59,19 @@ node -e "console.log('DO NOT INSTALL THIS A LIBRARY DEPENDENCY')"
 ## Usage
 
 In all the examples we assume that you've required the library in your
-**application** using: 
+**application** using:
 
 ```js
 'use strict';
 
 var Exception = require('exception');
+```
+
+To temporary disable exceptions being processed by this module set an
+enviroment variable.
+
+```
+EXCEPTION=false npm run something
 ```
 
 This requires the `Exception` class so you can generate new exceptions. One of
@@ -91,7 +98,7 @@ every single time it's called.
 You can supply the `.listen` function with a callback which will be called once
 the exception has been saved so you can exit the process your self. If you do
 not exit the node process we will attempt to abort the node process so the
-operation system will also generate a dump of the application. 
+operation system will also generate a dump of the application.
 
 ```js
 Exception.listen();
@@ -120,7 +127,7 @@ var CustomException = Exception.extend({
 ```
 
 We assume that the `putthisshitinmongodbmethod` does your fancy pancy database /
-storage call and calls the `fn` when completed. 
+storage call and calls the `fn` when completed.
 
 By default we just dump all the information in the `process.cwd()` of your node
 process. This can be less then ideal in certain cases as you might want to store
