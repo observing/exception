@@ -46,9 +46,9 @@ function Exception(err, options) {
   options = options || {};
   this.initialize(options);
 
+  this.message = err.message || 'An unknown Exception has occurred';
   this.timeout = options.timeout || 10000;
-  this.message = err.message;
-  this.stack = err.stack;
+  this.stack = err.stack || '';
   this.human = !!options.human;
 
   this.filename = new Date().toDateString().split(' ').concat([
