@@ -3,6 +3,7 @@
 var debug = require('diagnostics')('exception')
   , failing = require('failing-code')
   , heapdump = require('heapdump')
+  , once = require('one-time')
   , fuse = require('fusing')
   , path = require('path')
   , ini = require('ini')
@@ -22,6 +23,12 @@ if ('production' !== (process.env.NODE_ENV || '').toLowerCase()) {
 /**
  * Generates a new Exception.
  *
+ * Options:
+ *
+ * - timeout: Timeout for remote saving data before we call the supplied
+ *   abortion callback.
+ * - human: Provide a human readable console output.
+ *
  * @constructor
  * @param {Error} err The error that caused the exception.
  * @param {Object} options Configuration.
@@ -39,6 +46,7 @@ function Exception(err, options) {
   options = options || {};
   this.initialize(options);
 
+  this.timeout = options.timeout || 10000;
   this.message = err.message;
   this.stack = err.stack;
   this.human = !!options.human;
@@ -351,21 +359,38 @@ Exception.writable('remote', function remote(fn) {
  * @api public
  */
 Exception.readable('save', function save(fn) {
-  return this.console().disk().remote(fn || function abort() {
-    debug('stored the dump to all the things, attempting to crash project');
+  var kill = once(fn || this.abort);
 
-    //
-    // Exit the program using `process.abort()` which is abort(3C) on some
-    // systems this causes the OS to save a core file that can be used to
-    // read the JavaScript level state. Which could be helpful for debugging
-    // purposes. When `process.abort()` is not available SIGABRT is used
-    // instead.
-    //
-    // @TODO make this optional.
-    //
-    if (process.abort) process.abort();
-    for (;;) process.kill(process.pid, 'SIGABRT');
-  });
+  this.console().disk().remote(kill);
+
+  setTimeout(function timeout() {
+    kill(new Error('Remote storage took to long, timeout kicked in'));
+  }, this.timeout);
+
+  return this;
+});
+
+/**
+ * Attempt to abort and crash the process as hard as possible in order to
+ * generate a core dump which can help us debug things even further.
+ *
+ * @returns {Exception}
+ * @api public
+ */
+Exception.readable('abort', function abort() {
+  debug('stored the dump to all the things, attempting to crash project');
+
+  //
+  // Exit the program using `process.abort()` which is abort(3C) on some
+  // systems this causes the OS to save a core file that can be used to
+  // read the JavaScript level state. Which could be helpful for debugging
+  // purposes. When `process.abort()` is not available SIGABRT is used
+  // instead.
+  //
+  // @TODO make this optional.
+  //
+  if (process.abort) process.abort();
+  for (;;) process.kill(process.pid, 'SIGABRT');
 });
 
 /**
@@ -392,6 +417,8 @@ Exception.listen = function listen(fn) {
   // exception inception.
   //
   process.once('uncaughtException', function uncaught(err) {
+    if (process.env.EXCEPTION === 'false') return;
+
     (new Failure(err)).save(fn);
   });
 
