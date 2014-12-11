@@ -209,12 +209,13 @@ Exception.readable('toJSON', function extract() {
       modulesloaded: require('moduleloadlist')()
     },
     exception: {
+      heapdump: path.resolve(this.directory, 'exceptions', this.filename) +'.heapsnapshot',
       ocurred: new Date(),
       ms: Date.now(),
       message: this.message,
       stacktrace: this.stack.split('\n').map(function map(line) {
         return line.trim();
-      }),
+      }).filter(Boolean),
       line: (failing(this) || []).filter(function filter(stack) {
         return stack.failed;
       })
