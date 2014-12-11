@@ -417,7 +417,10 @@ Exception.listen = function listen(fn) {
   // exception inception.
   //
   process.once('uncaughtException', function uncaught(err) {
-    if (process.env.EXCEPTION === 'false') return;
+    if (process.env.EXCEPTION === 'false') {
+      if (!process.listeners('uncaughtException').length) throw err;
+      return;
+    }
 
     (new Failure(err)).save(fn);
   });
