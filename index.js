@@ -1,7 +1,7 @@
 'use strict';
 
-var debug = require('diagnostics')('exception')
-  , failing = require('failing-code')
+var failing = require('pruddy-error/failing-code')
+  , debug = require('diagnostics')('exception')
   , heapdump = require('heapdump')
   , once = require('one-time')
   , fuse = require('fusing')
