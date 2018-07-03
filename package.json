@@ -42,7 +42,7 @@
   "homepage": "https://github.com/observing/exception",
   "dependencies": {
     "diagnostics": "~1.0.1",
-    "pruddy-error": "1.0.x",
+    "pruddy-error": "~2.0.0",
     "fusing": "~1.0.0",
     "heapdump": "0.3.x",
     "ini": "1.3.x",
