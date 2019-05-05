@@ -48,6 +48,6 @@
     "ini": "1.3.x",
     "mkdirp": "0.5.x",
     "moduleloadlist": "0.0.x",
-    "one-time": "0.0.x"
+    "one-time": "~1.0.0"
   }
 }
