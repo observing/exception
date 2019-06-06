@@ -41,7 +41,7 @@
   },
   "homepage": "https://github.com/observing/exception",
   "dependencies": {
-    "diagnostics": "~1.0.1",
+    "diagnostics": "~2.0.2",
     "pruddy-error": "~2.0.0",
     "fusing": "~1.0.0",
     "heapdump": "0.3.x",
